@@ -34,6 +34,10 @@ export function addRemoteLoaderServerEntry(
     remoteLoaderProject?: string 
   }
 ) {
+  // IMPORTANT: This is looking for an Nx project named 'ngx-mf-remote-loader' in the workspace,
+  // not the npm package. For this generator to work, you need to have the ngx-mf-remote-loader
+  // project in your Nx workspace. Simply installing the npm package is not sufficient as
+  // this code needs to modify the project's source files.
   const remoteLoaderProjectName = options.remoteLoaderProject || 'ngx-mf-remote-loader'
   
   try {

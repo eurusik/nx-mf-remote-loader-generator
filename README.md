@@ -59,6 +59,12 @@ When you generate a remote component using this generator, it automatically:
 
 You can specify a custom remote loader project name using the `--remoteLoaderProject` option if your project uses a different name than the default `ngx-mf-remote-loader`.
 
+### Important Note About Remote Loader Project
+
+**IMPORTANT**: This generator looks for an Nx project named 'ngx-mf-remote-loader' in the workspace, not just the npm package. For this generator to work properly, you need to have the ngx-mf-remote-loader project in your Nx workspace. Simply installing the npm package is not sufficient as the generator needs to modify the project's source files.
+
+If you don't have the `ngx-mf-remote-loader` project in your workspace, the generator will skip the remote loader configuration with a warning message.
+
 ## How These Packages Work Together
 
 ### Architecture and Interaction
