@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "RemoteComponent",
+  "title": "Remote Component Generator",
+  "description": "Generate remote component and expose it with module federation",
+  "type": "object",
+  "properties": {
+    "remote": {
+      "type": "string",
+      "description": "Remote to add component to."
+    },
+    "selector": {
+      "type": "string",
+      "description": "Selector for the remote component.",
+      "default": "remote-component"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name under which the remote component will be exposed in Module Federation."
+    },
+    "displayBlock": {
+      "description": "Specifies if the style will contain :host { display: block; }.",
+      "type": "boolean",
+      "default": false,
+      "alias": "b"
+    },
+    "style": {
+      "description": "The file extension or preprocessor to use for style files, or none to skip generating the style file.",
+      "type": "string",
+      "default": "none",
+      "enum": ["css", "scss", "sass", "less", "none"]
+    },
+    "inlineTemplate": {
+      "description": "Indicates whether inline template should be used in the component.ts file.",
+      "type": "boolean",
+      "default": false,
+      "alias": "t"
+    },
+    "changeDetection": {
+      "description": "The change detection strategy to use in the new component.",
+      "enum": ["Default", "OnPush"],
+      "type": "string",
+      "default": "OnPush",
+      "alias": "c"
+    },
+    "remoteLoaderProject": {
+      "type": "string",
+      "description": "Name of the remote loader project. Defaults to 'ngx-mf-remote-loader' if not specified.",
+      "default": "ngx-mf-remote-loader"
+    }
+  },
+  "required": ["remote", "name"]
+}

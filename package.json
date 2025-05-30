@@ -1,0 +1,35 @@
+{
+  "name": "@nx-mf/remote-loader-generator",
+  "version": "0.0.1",
+  "description": "Nx generator for exposing remote components with SSR support in Module Federation",
+  "keywords": [
+    "nx",
+    "generator",
+    "angular",
+    "module-federation",
+    "remote",
+    "ssr"
+  ],
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@nx/angular": "*",
+    "@nx/devkit": "*",
+    "lodash": "^4.17.21"
+  },
+  "peerDependencies": {
+    "@nx/angular": "*",
+    "@nx/devkit": "*"
+  },
+  "exports": {
+    "./generators": {
+      "import": "./src/index.js"
+    }
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.17"
+  }
+}
