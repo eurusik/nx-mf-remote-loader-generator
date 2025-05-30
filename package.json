@@ -1,6 +1,6 @@
 {
   "name": "nx-mf-remote-loader-generator",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Nx generator for exposing remote components with SSR support in Module Federation",
   "author": {
     "name": "EuRusik",
