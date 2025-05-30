@@ -2,9 +2,12 @@
 
 A Nx generator for creating and exposing remote components with SSR support in Module Federation. This generator works in conjunction with `ngx-mf-remote-loader` to provide seamless SSR support for remote components.
 
-## Prerequisites
+## Features
 
-This generator works best when used with the [`ngx-mf-remote-loader`](https://github.com/eurusik/ngx-mf-remote-loader) package, which provides server-side rendering support for Module Federation remote components.
+- Creates Angular components that can be exposed via Module Federation
+- Configures components for server-side rendering (SSR) support
+- Automatically registers components with the remote loader
+- Adds type declarations for better TypeScript support
 
 ## Installation
 
@@ -12,9 +15,11 @@ This generator works best when used with the [`ngx-mf-remote-loader`](https://gi
 npm install nx-mf-remote-loader-generator
 ```
 
-## Usage
+## Prerequisites
 
-Once installed, you can use the generator to create a new remote component:
+This generator is designed to work with the [`ngx-mf-remote-loader`](https://github.com/eurusik/ngx-mf-remote-loader) package, which provides server-side rendering support for Module Federation remote components.
+
+## Usage
 
 ```bash
 nx g nx-mf-remote-loader-generator:remoteComponent \
@@ -23,223 +28,140 @@ nx g nx-mf-remote-loader-generator:remoteComponent \
   --selector=my-remote-component
 ```
 
-### Options
+### Generator Options
 
 | Option | Description | Type | Default |
 |--------|-------------|------|---------|
 | `remote` | Remote application to add component to | string | *required* |
-| `name` | Name under which the remote component will be exposed in Module Federation | string | *required* |
+| `name` | Name under which the component will be exposed | string | *required* |
 | `selector` | Selector for the remote component | string | `remote-component` |
-| `displayBlock` | Specifies if the style will contain `:host { display: block; }` | boolean | `false` |
-| `style` | The file extension or preprocessor to use for style files | `css`, `scss`, `sass`, `less`, `none` | `none` |
-| `inlineTemplate` | Indicates whether inline template should be used in the component.ts file | boolean | `false` |
-| `changeDetection` | The change detection strategy to use in the new component | `Default`, `OnPush` | `OnPush` |
+| `displayBlock` | Add `:host { display: block; }` to styles | boolean | `false` |
+| `style` | Style file extension/preprocessor | `css`, `scss`, `sass`, `less`, `none` | `none` |
+| `inlineTemplate` | Use inline template in component.ts | boolean | `false` |
+| `changeDetection` | Change detection strategy | `Default`, `OnPush` | `OnPush` |
 | `remoteLoaderProject` | Name of the remote loader project | string | `ngx-mf-remote-loader` |
 
-## What it does
+## Important: Workspace Project Requirement
+
+**This generator requires an Nx project named 'ngx-mf-remote-loader' in your workspace**. Simply installing the npm package is not sufficient, as the generator needs to modify project source files.
+
+If the project is not found, the generator will skip the remote loader configuration with a warning message.
+
+## How It Works
+
+When you run the generator, it:
 
 1. Creates a new Angular component in the specified remote application
 2. Configures the component to be exposed via Module Federation
 3. Updates the remote application's TypeScript configuration
 4. Adds the component to the remote loader server for SSR support
+5. Adds type declarations for the remote component
 
-## Integration with ngx-mf-remote-loader
+## Creating Your Own Remote Loader Implementation
 
-This generator is designed to work with the [`ngx-mf-remote-loader`](https://github.com/eurusik/ngx-mf-remote-loader) package, which provides:
+You can create your own implementation of the remote loader while using the interfaces from `ngx-mf-remote-loader`. This gives you more control while ensuring compatibility with the generator.
 
-- Server-side rendering (SSR) support for Module Federation remote components
-- Dynamic loading of remote components at runtime
-- Type safety for remote component imports
+### Step 1: Create a library in your Nx workspace
 
-When you generate a remote component using this generator, it automatically:
+```bash
+nx g @nx/angular:library my-remote-loader --buildable
+```
 
-1. Registers the component in the remote loader server
-2. Adds type declarations for the remote component
-3. Updates the necessary configuration files
+### Step 2: Implement the browser loader
 
-You can specify a custom remote loader project name using the `--remoteLoaderProject` option if your project uses a different name than the default `ngx-mf-remote-loader`.
+```typescript
+// libs/my-remote-loader/src/lib/remote-loader-browser.ts
+import { loadRemoteModule } from '@nx/angular/mf';
+import { RemoteLoader } from 'ngx-mf-remote-loader';
 
-### Important Note About Remote Loader Project
+export class RemoteLoaderBrowser extends RemoteLoader {
+  load(remoteName: string, remoteModule: string): Promise<any> {
+    return loadRemoteModule(remoteName, './' + remoteModule).then((m) => {
+      return remoteModule === 'Module' ? m.RemoteEntryModule : m;
+    });
+  }
+}
+```
 
-**IMPORTANT**: This generator looks for an Nx project named 'ngx-mf-remote-loader' in the workspace, not just the npm package. For this generator to work properly, you need to have the ngx-mf-remote-loader project in your Nx workspace. Simply installing the npm package is not sufficient as the generator needs to modify the project's source files.
+### Step 3: Implement the server-side loader
 
-If you don't have the `ngx-mf-remote-loader` project in your workspace, the generator will skip the remote loader configuration with a warning message.
+```typescript
+// libs/my-remote-loader/src/lib/remote-loader-server.ts
+import { RemoteLoader } from 'ngx-mf-remote-loader';
 
-### Creating Your Own Custom Remote Loader Implementation
+export class RemoteLoaderServer extends RemoteLoader {
+  private moduleRegistry: Record<string, () => Promise<any>> = {};
 
-You can create your own custom implementation of the remote loader functionality while using the interfaces from the `ngx-mf-remote-loader` package. This approach gives you more control over the implementation details while ensuring the generator can find and modify your library. The following examples show how to create your own implementation classes that extend the base classes from `ngx-mf-remote-loader`.
+  registerRemoteModule(remoteName: string, moduleName: string, importFn: () => Promise<any>) {
+    this.moduleRegistry[remoteName + moduleName] = importFn;
+  }
 
-1. **Create a new library in your Nx workspace**:
+  load(remoteName: string, remoteModule: string): Promise<any> {
+    const key = remoteName + remoteModule;
+    // DefaultClause
+    throw new Error(`Remote module ${remoteName}/${remoteModule} not found`);
+  }
+}
+```
 
-   ```bash
-   nx g @nx/angular:library my-remote-loader --buildable
-   ```
+### Step 4: Create a remotes.d.ts file
 
-2. **Implement the core classes** for your own library following the same patterns as `ngx-mf-remote-loader`:
+```typescript
+// libs/my-remote-loader/src/lib/remotes.d.ts
+// Type declarations for remote modules will be added here by the generator
+```
 
-   > Note: The examples below show how to create your own implementation classes that extend the base classes from the ngx-mf-remote-loader package. Your custom implementations will be used through dependency injection while still using the interfaces from ngx-mf-remote-loader.
+### Step 5: Export your implementations
 
-   ```typescript
-   // libs/my-remote-loader/src/lib/remote-loader-browser.ts
-   import { loadRemoteModule } from '@nx/angular/mf';
-   import { RemoteLoader } from 'ngx-mf-remote-loader';
+```typescript
+// libs/my-remote-loader/src/index.ts
+// We only export our custom implementations
+export * from './lib/remote-loader-browser';
+export * from './lib/remote-loader-server';
 
-   export class RemoteLoaderBrowser extends RemoteLoader {
-     load(remoteName: string, remoteModule: string): Promise<any> {
-       return loadRemoteModule(remoteName, './' + remoteModule).then((m) => {
-         return remoteModule === 'Module' ? m.RemoteEntryModule : m;
-       });
-     }
-   }
-   ```
+export function remoteLoader(remoteName: string) {
+  return () => import('./lib/remote-loader-component').then(
+    (m) => m.createRemoteModule(remoteName)
+  );
+}
+```
 
-3. **Create the server-side implementation**:
+### Step 6: Use your implementation via dependency injection
 
-   ```typescript
-   // libs/my-remote-loader/src/lib/remote-loader-server.ts
-   import { RemoteLoader } from 'ngx-mf-remote-loader';
+```typescript
+// app.module.ts
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+// Still import from ngx-mf-remote-loader - your implementation will be used through DI
+import { RemoteLoader } from 'ngx-mf-remote-loader';
+// Import your custom implementation
+import { RemoteLoaderBrowser } from './path-to-your-implementation';
+import { AppComponent } from './app.component';
 
-   export class RemoteLoaderServer extends RemoteLoader {
-     private moduleRegistry: Record<string, () => Promise<any>> = {};
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule],
+  providers: [
+    {
+      provide: RemoteLoader,
+      useClass: RemoteLoaderBrowser
+    }
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+```
 
-     registerRemoteModule(remoteName: string, moduleName: string, importFn: () => Promise<any>) {
-       this.moduleRegistry[remoteName + moduleName] = importFn;
-     }
+### Step 7: Generate components with your custom library
 
-     load(remoteName: string, remoteModule: string): Promise<any> {
-       const key = remoteName + remoteModule;
-       // DefaultClause
-       throw new Error(`Remote module ${remoteName}/${remoteModule} not found`);
-     }
-   }
-   ```
+```bash
+nx g nx-mf-remote-loader-generator:remoteComponent \
+  --remote=my-remote-app \
+  --name=MyComponent \
+  --remoteLoaderProject=my-remote-loader
+```
 
-4. **Create a remotes.d.ts file** for type declarations:
-
-   ```typescript
-   // libs/my-remote-loader/src/lib/remotes.d.ts
-   // Type declarations for remote modules will be added here by the generator
-   ```
-
-5. **Export everything in your public API**:
-
-   ```typescript
-   // libs/my-remote-loader/src/index.ts
-   // We only export our custom implementations
-   export * from './lib/remote-loader-browser';
-   export * from './lib/remote-loader-server';
-   
-   export function remoteLoader(remoteName: string) {
-     return () => import('./lib/remote-loader-component').then(
-       (m) => m.createRemoteModule(remoteName)
-     );
-   }
-   ```
-
-6. **Use your custom library** in your application instead of the original `ngx-mf-remote-loader`:
-
-   ```typescript
-   // app.module.ts
-   import { NgModule } from '@angular/core';
-   import { BrowserModule } from '@angular/platform-browser';
-   import { RemoteLoader, RemoteLoaderBrowser } from 'ngx-mf-remote-loader';
-   import { AppComponent } from './app.component';
-
-   @NgModule({
-     declarations: [AppComponent],
-     imports: [BrowserModule],
-     providers: [
-       {
-         provide: RemoteLoader,
-         useClass: RemoteLoaderBrowser
-       }
-     ],
-     bootstrap: [AppComponent]
-   })
-   export class AppModule {}
-   ```
-
-7. **Generate remote components** using your custom library name:
-
-   ```bash
-   nx g nx-mf-remote-loader-generator:remoteComponent \
-     --remote=my-remote-app \
-     --name=MyComponent \
-     --remoteLoaderProject=my-remote-loader
-   ```
-
-With this approach, your application will still use the `ngx-mf-remote-loader` package interfaces, but your custom implementation will be injected at runtime. The generator will find the `ngx-mf-remote-loader` project in your workspace and correctly add the necessary code to support your remote components. This gives you full control over the implementation details while still benefiting from the automation provided by the generator.
-
-## How These Packages Work Together
-
-### Architecture and Interaction
-
-`nx-mf-remote-loader-generator` and `ngx-mf-remote-loader` create a complete solution for working with remote components in Module Federation with SSR support:
-
-- **nx-mf-remote-loader-generator** is a generator that automates the creation and configuration of remote components
-- **ngx-mf-remote-loader** is a library that provides loading and rendering of these components on both server and client sides
-
-### Workflow
-
-1. **Creating a Remote Component**:
-   ```bash
-   nx g nx-mf-remote-loader-generator:remoteComponent --remote=my-remote --name=MyComponent
-   ```
-   
-   The generator creates a component in the remote application and configures it for export through Module Federation.
-
-2. **Registration in remote-loader-server**:
-   The generator automatically adds the component to the `remote-loader-server.ts` file of the `ngx-mf-remote-loader` project:
-   ```typescript
-   case 'my-remoteMyComponent':
-     // eslint-disable-next-line @nx/enforce-module-boundaries
-     return import('my-remote/MyComponent');
-   ```
-
-3. **Type Declaration**:
-   The generator adds a type declaration in the `remotes.d.ts` file:
-   ```typescript
-   declare module 'my-remote/MyComponent'
-   ```
-
-4. **Using the Remote Component**:
-   In your host application, you can now import and use the remote component:
-   ```typescript
-   import { RemoteLoaderComponent } from 'ngx-mf-remote-loader';
-   
-   @Component({
-     template: `
-       <remote-loader remoteId="my-remoteMyComponent"></remote-loader>
-     `
-   })
-   export class AppComponent {}
-   ```
-
-5. **Server-Side Rendering**:
-   When the page is rendered on the server, `ngx-mf-remote-loader` will use the registered component from the server-side registry to render it properly, ensuring that the component is available during SSR.
-
-
-
-## Example Workflow
-
-1. Install both packages in your NX workspace:
-   ```bash
-   npm install nx-mf-remote-loader-generator ngx-mf-remote-loader
-   ```
-   
-   You can find more information about the remote loader package at [https://github.com/eurusik/ngx-mf-remote-loader](https://github.com/eurusik/ngx-mf-remote-loader)
-
-2. Set up your remote application with Module Federation
-
-3. Generate a remote component:
-   ```bash
-   nx g nx-mf-remote-loader-generator:remoteComponent \
-     --remote=my-remote-app \
-     --name=MyComponent \
-     --selector=my-component
-   ```
-
-4. Import and use the remote component in your host application using the remote loader
+With this approach, your application uses the `ngx-mf-remote-loader` interfaces, but your custom implementation is injected at runtime.
 
 ## License
 
