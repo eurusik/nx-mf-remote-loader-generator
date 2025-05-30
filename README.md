@@ -65,6 +65,114 @@ You can specify a custom remote loader project name using the `--remoteLoaderPro
 
 If you don't have the `ngx-mf-remote-loader` project in your workspace, the generator will skip the remote loader configuration with a warning message.
 
+### Creating Your Own Custom Remote Loader Library
+
+Instead of using the npm package, you can create your own custom remote loader library in your Nx workspace based on the patterns from `ngx-mf-remote-loader`. This approach gives you more control and ensures the generator can find and modify your library.
+
+1. **Create a new library in your Nx workspace**:
+
+   ```bash
+   nx g @nx/angular:library my-remote-loader --buildable
+   ```
+
+2. **Implement the core classes** based on the `ngx-mf-remote-loader` patterns:
+
+   ```typescript
+   // libs/my-remote-loader/src/lib/remote-loader.ts
+   export abstract class RemoteLoader {
+     abstract load(remoteName: string, remoteModule: string): Promise<any>;
+   }
+
+   // libs/my-remote-loader/src/lib/remote-loader-browser.ts
+   import { loadRemoteModule } from '@nx/angular/mf';
+   import { RemoteLoader } from './remote-loader';
+
+   export class RemoteLoaderBrowser extends RemoteLoader {
+     load(remoteName: string, remoteModule: string): Promise<any> {
+       return loadRemoteModule(remoteName, './' + remoteModule).then((m) => {
+         return remoteModule === 'Module' ? m.RemoteEntryModule : m;
+       });
+     }
+   }
+   ```
+
+3. **Create the server-side implementation**:
+
+   ```typescript
+   // libs/my-remote-loader/src/lib/remote-loader-server.ts
+   import { RemoteLoader } from './remote-loader';
+
+   export class RemoteLoaderServer extends RemoteLoader {
+     private moduleRegistry: Record<string, () => Promise<any>> = {};
+
+     registerRemoteModule(remoteName: string, moduleName: string, importFn: () => Promise<any>) {
+       this.moduleRegistry[remoteName + moduleName] = importFn;
+     }
+
+     load(remoteName: string, remoteModule: string): Promise<any> {
+       const key = remoteName + remoteModule;
+       // DefaultClause
+       throw new Error(`Remote module ${remoteName}/${remoteModule} not found`);
+     }
+   }
+   ```
+
+4. **Create a remotes.d.ts file** for type declarations:
+
+   ```typescript
+   // libs/my-remote-loader/src/lib/remotes.d.ts
+   // Type declarations for remote modules will be added here by the generator
+   ```
+
+5. **Export everything in your public API**:
+
+   ```typescript
+   // libs/my-remote-loader/src/index.ts
+   export * from './lib/remote-loader';
+   export * from './lib/remote-loader-browser';
+   export * from './lib/remote-loader-server';
+   
+   export function remoteLoader(remoteName: string) {
+     return () => import('./lib/remote-loader-component').then(
+       (m) => m.createRemoteModule(remoteName)
+     );
+   }
+   ```
+
+6. **Use your custom library** in your application:
+
+   ```typescript
+   // app.module.ts
+   import { NgModule } from '@angular/core';
+   import { BrowserModule } from '@angular/platform-browser';
+   import { RemoteLoader, RemoteLoaderBrowser } from 'my-remote-loader';
+   import { AppComponent } from './app.component';
+
+   @NgModule({
+     declarations: [AppComponent],
+     imports: [BrowserModule],
+     providers: [
+       {
+         provide: RemoteLoader,
+         useClass: RemoteLoaderBrowser
+       }
+     ],
+     bootstrap: [AppComponent]
+   })
+   export class AppModule {}
+   ```
+
+7. **Generate remote components** using your custom library name:
+
+   ```bash
+   nx g nx-mf-remote-loader-generator:remoteComponent \
+     --remote=my-remote-app \
+     --name=MyComponent \
+     --remoteLoaderProject=my-remote-loader
+   ```
+
+With this approach, the generator will find your custom library in the workspace and correctly add the necessary code to support your remote components.
+
 ## How These Packages Work Together
 
 ### Architecture and Interaction
