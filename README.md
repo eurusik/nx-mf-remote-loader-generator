@@ -9,7 +9,7 @@ This generator works best when used with the [`ngx-mf-remote-loader`](https://gi
 ## Installation
 
 ```bash
-npm install @nx-mf/remote-loader-generator
+npm install nx-mf-remote-loader-generator
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ npm install @nx-mf/remote-loader-generator
 Once installed, you can use the generator to create a new remote component:
 
 ```bash
-nx g @nx-mf/remote-loader-generator:remoteComponent \
+nx g nx-mf-remote-loader-generator:remoteComponent \
   --remote=my-remote-app \
   --name=MyComponent \
   --selector=my-remote-component
@@ -72,7 +72,7 @@ You can specify a custom remote loader project name using the `--remoteLoaderPro
 
 1. **Creating a Remote Component**:
    ```bash
-   nx g @nx-mf/remote-loader-generator:remoteComponent --remote=my-remote --name=MyComponent
+   nx g nx-mf-remote-loader-generator:remoteComponent --remote=my-remote --name=MyComponent
    ```
    
    The generator creates a component in the remote application and configures it for export through Module Federation.
@@ -113,7 +113,7 @@ You can specify a custom remote loader project name using the `--remoteLoaderPro
 
 1. Install both packages in your NX workspace:
    ```bash
-   npm install @nx-mf/remote-loader-generator ngx-mf-remote-loader
+   npm install nx-mf-remote-loader-generator ngx-mf-remote-loader
    ```
    
    You can find more information about the remote loader package at [https://github.com/eurusik/ngx-mf-remote-loader](https://github.com/eurusik/ngx-mf-remote-loader)
@@ -122,7 +122,7 @@ You can specify a custom remote loader project name using the `--remoteLoaderPro
 
 3. Generate a remote component:
    ```bash
-   nx g @nx-mf/remote-loader-generator:remoteComponent \
+   nx g nx-mf-remote-loader-generator:remoteComponent \
      --remote=my-remote-app \
      --name=MyComponent \
      --selector=my-component

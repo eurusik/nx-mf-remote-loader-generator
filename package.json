@@ -23,13 +23,13 @@
     "remote",
     "ssr"
   ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "files": [
-    "dist"
+    "src"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "echo 'Publishing TypeScript files directly'",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -43,7 +43,7 @@
   },
   "exports": {
     "./generators": {
-      "import": "./dist/index.js"
+      "import": "./src/index.ts"
     }
   },
   "devDependencies": {
