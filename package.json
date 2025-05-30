@@ -2,6 +2,19 @@
   "name": "@nx-mf/remote-loader-generator",
   "version": "0.0.1",
   "description": "Nx generator for exposing remote components with SSR support in Module Federation",
+  "author": {
+    "name": "EuRusik",
+    "url": "https://github.com/eurusik"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eurusik/nx-mf-remote-loader-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/eurusik/nx-mf-remote-loader-generator/issues"
+  },
+  "homepage": "https://github.com/eurusik/nx-mf-remote-loader-generator#readme",
   "keywords": [
     "nx",
     "generator",
@@ -10,11 +23,15 @@
     "remote",
     "ssr"
   ],
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "files": [
-    "src"
+    "dist"
   ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
   "dependencies": {
     "@nx/angular": "*",
     "@nx/devkit": "*",
@@ -26,7 +43,7 @@
   },
   "exports": {
     "./generators": {
-      "import": "./src/index.js"
+      "import": "./dist/index.js"
     }
   },
   "devDependencies": {
