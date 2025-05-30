@@ -65,9 +65,9 @@ You can specify a custom remote loader project name using the `--remoteLoaderPro
 
 If you don't have the `ngx-mf-remote-loader` project in your workspace, the generator will skip the remote loader configuration with a warning message.
 
-### Creating Your Own Custom Remote Loader Library
+### Creating Your Own Custom Remote Loader Implementation
 
-Instead of using the npm package, you can create your own custom remote loader library in your Nx workspace based on the patterns from `ngx-mf-remote-loader`. This approach gives you more control and ensures the generator can find and modify your library.
+You can create your own custom implementation of the remote loader functionality while using the interfaces from the `ngx-mf-remote-loader` package. This approach gives you more control over the implementation details while ensuring the generator can find and modify your library. The following examples show how to create your own implementation classes that extend the base classes from `ngx-mf-remote-loader`.
 
 1. **Create a new library in your Nx workspace**:
 
@@ -75,17 +75,14 @@ Instead of using the npm package, you can create your own custom remote loader l
    nx g @nx/angular:library my-remote-loader --buildable
    ```
 
-2. **Implement the core classes** based on the `ngx-mf-remote-loader` patterns:
+2. **Implement the core classes** for your own library following the same patterns as `ngx-mf-remote-loader`:
+
+   > Note: The examples below show how to create your own implementation classes that extend the base classes from the ngx-mf-remote-loader package. Your custom implementations will be used through dependency injection while still using the interfaces from ngx-mf-remote-loader.
 
    ```typescript
-   // libs/my-remote-loader/src/lib/remote-loader.ts
-   export abstract class RemoteLoader {
-     abstract load(remoteName: string, remoteModule: string): Promise<any>;
-   }
-
    // libs/my-remote-loader/src/lib/remote-loader-browser.ts
    import { loadRemoteModule } from '@nx/angular/mf';
-   import { RemoteLoader } from './remote-loader';
+   import { RemoteLoader } from 'ngx-mf-remote-loader';
 
    export class RemoteLoaderBrowser extends RemoteLoader {
      load(remoteName: string, remoteModule: string): Promise<any> {
@@ -100,7 +97,7 @@ Instead of using the npm package, you can create your own custom remote loader l
 
    ```typescript
    // libs/my-remote-loader/src/lib/remote-loader-server.ts
-   import { RemoteLoader } from './remote-loader';
+   import { RemoteLoader } from 'ngx-mf-remote-loader';
 
    export class RemoteLoaderServer extends RemoteLoader {
      private moduleRegistry: Record<string, () => Promise<any>> = {};
@@ -128,7 +125,7 @@ Instead of using the npm package, you can create your own custom remote loader l
 
    ```typescript
    // libs/my-remote-loader/src/index.ts
-   export * from './lib/remote-loader';
+   // We only export our custom implementations
    export * from './lib/remote-loader-browser';
    export * from './lib/remote-loader-server';
    
@@ -139,13 +136,13 @@ Instead of using the npm package, you can create your own custom remote loader l
    }
    ```
 
-6. **Use your custom library** in your application:
+6. **Use your custom library** in your application instead of the original `ngx-mf-remote-loader`:
 
    ```typescript
    // app.module.ts
    import { NgModule } from '@angular/core';
    import { BrowserModule } from '@angular/platform-browser';
-   import { RemoteLoader, RemoteLoaderBrowser } from 'my-remote-loader';
+   import { RemoteLoader, RemoteLoaderBrowser } from 'ngx-mf-remote-loader';
    import { AppComponent } from './app.component';
 
    @NgModule({
@@ -171,7 +168,7 @@ Instead of using the npm package, you can create your own custom remote loader l
      --remoteLoaderProject=my-remote-loader
    ```
 
-With this approach, the generator will find your custom library in the workspace and correctly add the necessary code to support your remote components.
+With this approach, your application will still use the `ngx-mf-remote-loader` package interfaces, but your custom implementation will be injected at runtime. The generator will find the `ngx-mf-remote-loader` project in your workspace and correctly add the necessary code to support your remote components. This gives you full control over the implementation details while still benefiting from the automation provided by the generator.
 
 ## How These Packages Work Together
 
