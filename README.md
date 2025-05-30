@@ -107,25 +107,7 @@ You can specify a custom remote loader project name using the `--remoteLoaderPro
 5. **Server-Side Rendering**:
    When the page is rendered on the server, `ngx-mf-remote-loader` will use the registered component from the server-side registry to render it properly, ensuring that the component is available during SSR.
 
-## Development
 
-### Local Testing
-
-To test this generator locally:
-
-```bash
-# From the generator directory
-npm pack
-
-# From your NX workspace
-npm install /path/to/nx-mf-remote-loader-generator-0.0.1.tgz
-```
-
-### Publishing
-
-```bash
-npm publish --access public
-```
 
 ## Example Workflow
 
