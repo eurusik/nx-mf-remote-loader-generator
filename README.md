@@ -59,7 +59,7 @@ When you run the generator, it:
 
 ## Creating Your Own Remote Loader Implementation
 
-You can create your own implementation of the remote loader while using the interfaces from `ngx-mf-remote-loader`. This gives you more control while ensuring compatibility with the generator.
+You need to create your own implementation of the remote loader while using the interfaces from `ngx-mf-remote-loader`. This gives you more control while ensuring compatibility with the generator.
 
 ### Step 1: Create a library in your Nx workspace
 
