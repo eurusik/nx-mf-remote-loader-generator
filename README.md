@@ -9,12 +9,6 @@ A Nx generator for creating and exposing remote components with SSR support in M
 - Automatically registers components with the remote loader
 - Adds type declarations for better TypeScript support
 
-## Installation
-
-```bash
-npm install nx-mf-remote-loader-generator
-```
-
 ## Prerequisites
 
 This generator is designed to work with the [`ngx-mf-remote-loader`](https://github.com/eurusik/ngx-mf-remote-loader) package, which provides server-side rendering support for Module Federation remote components.
